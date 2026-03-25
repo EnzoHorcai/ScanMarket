@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Scanner Pro</title>
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root { --primary: #2563eb; --secondary: #10b981; --dark: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; display: flex; justify-content: center; padding: 10px; }
+        .container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 450px; min-height: 500px; }
+        .hidden { display: none !important; }
+        
+        /* UI Elements */
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; margin-top: 10px; }
+        .btn-blue { background: var(--primary); }
+        .btn-green { background: var(--secondary); }
+        
+        #map { height: 350px; width: 100%; border-radius: 12px; margin-top: 15px; border: 1px solid #e2e8f0; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; }
+        .step-title { color: var(--dark); margin-bottom: 5px; }
+        .market-info { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem; border-left: 4px solid var(--secondary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="step-1">
+        <h2 class="step-title">Login</h2>
+        <p>Acesse para encontrar mercados</p>
+        <input type="text" id="user" placeholder="Usuário (admin)">
+        <input type="password" id="pass" placeholder="Senha (123)">
+        <button class="btn-blue" onclick="fluxoLogin()">Entrar</button>
+    </div>
+
+    <div id="step-2" class="hidden">
+        <h2 class="step-title">Mercados Próximos</h2>
+        <p>Selecione um mercado no mapa para escanear</p>
+        <div id="map"></div>
+        <div id="market-selected" class="market-info hidden">
+            <span>🛒 Mercado: <strong id="nome-mercado">---</strong></span>
+            <button class="btn-green" onclick="abrirScanner()">Abrir Scanner neste local</button>
+        </div>
+    </div>
+
+    <div id="step-3" class="hidden">
+        <h2 class="step-title">Scanner</h2>
+        <p id="info-loja" style="color: var(--secondary); font-weight: bold;"></p>
+        <div id="reader"></div>
+        <button onclick="voltarParaMapa()" style="background: #64748b;">⬅ Voltar ao Mapa</button>
+    </div>
+</div>
+
+<script>
+    let map;
+    let selectedMarket = "";
+
+    // 1. Lógica de Login
+    function fluxoLogin() {
+        if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "123") {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            iniciarGeolocalizacao();
+        } else {
+            alert("Erro no login!");
+        }
+    }
+
+    // 2. Lógica do Mapa e Mercados
+    function iniciarGeolocalizacao() {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const { latitude, longitude } = pos.coords;
+
+            map = L.map('map').setView([latitude, longitude], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            // Marcador da sua posição
+            L.marker([latitude, longitude]).addTo(map).bindPopup("Você está aqui").openPopup();
+
+            // Gerar mercados simulados próximos (Adicionando um valor pequeno na lat/lng)
+            const mercados = [
+                { nome: "Mercado Central", lat: latitude + 0.002, lng: longitude + 0.002 },
+                { nome: "Supermercado Econômico", lat: latitude - 0.003, lng: longitude + 0.001 },
+                { nome: "Hortifruti Vida", lat: latitude + 0.001, lng: longitude - 0.004 }
+            ];
+
+            mercados.forEach(m => {
+                let marker = L.marker([m.lat, m.lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3081/3081840.png',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(map);
+
+                marker.on('click', () => {
+                    selectedMarket = m.nome;
+                    document.getElementById('nome-mercado').innerText = m.nome;
+                    document.getElementById('market-selected').classList.remove('hidden');
+                });
+            });
+
+        }, () => alert("Ative o GPS!"));
+    }
+
+    // 3. Lógica do Scanner
+    function abrirScanner() {
+        document.getElementById('step-2').classList.add('hidden');
+        document.getElementById('step-3').classList.remove('hidden');
+        document.getElementById('info-loja').innerText = "Loja: " + selectedMarket;
+
+        const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        scanner.render((text) => {
+            alert(`Sucesso no ${selectedMarket}!\nCódigo: ${text}`);
+            scanner.clear();
+        });
+    }
+
+    function voltarParaMapa() {
+        document.getElementById('step-3').classList.add('hidden');
+        document.getElementById('step-2').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
