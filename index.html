@@ -3,128 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Scanner Pro</title>
-    
+    <title>ScanMarket</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        :root { --primary: #2563eb; --secondary: #10b981; --dark: #1e293b; }
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; display: flex; justify-content: center; padding: 10px; }
-        .container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 450px; min-height: 500px; }
-        .hidden { display: none !important; }
+        :root { --blue: #3b82f6; --bg: #f8fafc; --text: #1e293b; --green: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+        .page { display: none; padding: 20px; max-width: 450px; margin: 0 auto; min-height: 100vh; flex-direction: column; }
+        .active { display: flex; }
+
+        /* Componentes de UI do Protótipo */
+        .logo { font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        input { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        .btn-main { background: var(--blue); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
         
-        /* UI Elements */
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; margin-top: 10px; }
-        .btn-blue { background: var(--primary); }
-        .btn-green { background: var(--secondary); }
+        /* Lista de Mercados */
+        .market-card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* Scanner e Produtos */
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--blue); }
+        .product-list { margin-top: 20px; flex-grow: 1; }
+        .product-item { background: white; padding: 12px; border-radius: 12px; display: flex; align-items: center; margin-bottom: 8px; justify-content: space-between; }
         
-        #map { height: 350px; width: 100%; border-radius: 12px; margin-top: 15px; border: 1px solid #e2e8f0; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; }
-        .step-title { color: var(--dark); margin-bottom: 5px; }
-        .market-info { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem; border-left: 4px solid var(--secondary); }
+        /* Carrinho e Checkout */
+        .cart-badge { position: absolute; top: 20px; right: 20px; background: red; color: white; border-radius: 50%; padding: 4px 8px; font-size: 0.8rem; }
+        .qr-final { width: 250px; height: 250px; margin: 20px auto; border: 10px solid black; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="step-1">
-        <h2 class="step-title">Login</h2>
-        <p>Acesse para encontrar mercados</p>
-        <input type="text" id="user" placeholder="Usuário (admin)">
-        <input type="password" id="pass" placeholder="Senha (123)">
-        <button class="btn-blue" onclick="fluxoLogin()">Entrar</button>
-    </div>
-
-    <div id="step-2" class="hidden">
-        <h2 class="step-title">Mercados Próximos</h2>
-        <p>Selecione um mercado no mapa para escanear</p>
-        <div id="map"></div>
-        <div id="market-selected" class="market-info hidden">
-            <span>🛒 Mercado: <strong id="nome-mercado">---</strong></span>
-            <button class="btn-green" onclick="abrirScanner()">Abrir Scanner neste local</button>
+    <div id="login" class="page active">
+        <div style="text-align: center; margin-top: 50px;">
+            <i class="fas fa-shopping-cart" style="font-size: 3rem; color: var(--blue);"></i>
+            <div class="logo">ScanMarket</div>
+            <p>Faça login para continuar</p>
         </div>
+        <div class="input-group">
+            <label>CPF</label>
+            <input type="text" placeholder="000.000.000-00">
+        </div>
+        <div class="input-group">
+            <label>Senha</label>
+            <input type="password" placeholder="Digite sua senha">
+        </div>
+        <button class="btn-main" onclick="changePage('markets')">Entrar</button>
     </div>
 
-    <div id="step-3" class="hidden">
-        <h2 class="step-title">Scanner</h2>
-        <p id="info-loja" style="color: var(--secondary); font-weight: bold;"></p>
+    <div id="markets" class="page">
+        <h2>Mercados Próximos</h2>
+        <div class="market-card" onclick="startScanner('Supermercado Bom Preço')">
+            <div>
+                <strong>Supermercado Bom Preço</strong><br>
+                <small>Av. Paulista, 1000 - 0.5 km</small>
+            </div>
+            <i class="fas fa-lock-open" style="color: var(--blue);"></i>
+        </div>
+        <div id="map" style="height: 200px; border-radius: 15px; margin-top: 10px;"></div>
+    </div>
+
+    <div id="scanner" class="page">
+        <div style="display:flex; justify-content: space-between;">
+            <h3 id="store-name">Loja</h3>
+            <div onclick="changePage('cart')"><i class="fas fa-shopping-basket"></i> <span id="cart-count">0</span></div>
+        </div>
         <div id="reader"></div>
-        <button onclick="voltarParaMapa()" style="background: #64748b;">⬅ Voltar ao Mapa</button>
+        <p>Posicione o código no centro da tela</p>
+        
+        <div class="product-list" id="scanned-items">
+            </div>
+        <button class="btn-main" onclick="changePage('cart')">Finalizar Compra</button>
     </div>
-</div>
 
-<script>
-    let map;
-    let selectedMarket = "";
+    <div id="cart" class="page">
+        <h2>Pagamento</h2>
+        <div class="qr-final" id="payment-qr">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PAGAMENTO_SIMULADO" width="100%">
+        </div>
+        <p>Escaneie este QR Code no caixa eletrônico</p>
+        <button class="btn-main" style="background: var(--green);" onclick="changePage('final')">Simular Pagamento</button>
+    </div>
 
-    // 1. Lógica de Login
-    function fluxoLogin() {
-        if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "123") {
-            document.getElementById('step-1').classList.add('hidden');
-            document.getElementById('step-2').classList.remove('hidden');
-            iniciarGeolocalizacao();
-        } else {
-            alert("Erro no login!");
+    <div id="final" class="page" style="text-align: center;">
+        <div style="background: var(--green); color: white; padding: 10px; border-radius: 5px;">FISCAL</div>
+        <h2>Liberação de Saída</h2>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=SAIDA_AUTORIZADA" style="margin: 20px auto;">
+        <div class="product-item">
+            <strong>Compra #33870</strong>
+            <span>Total Itens: <span id="final-count">0</span></span>
+        </div>
+        <button class="btn-main" onclick="location.reload()">Voltar ao Início</button>
+    </div>
+
+    <script>
+        let cart = [];
+        let html5QrCode;
+
+        function changePage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if(pageId === 'markets') initMap();
         }
-    }
 
-    // 2. Lógica do Mapa e Mercados
-    function iniciarGeolocalizacao() {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const { latitude, longitude } = pos.coords;
-
-            map = L.map('map').setView([latitude, longitude], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-            // Marcador da sua posição
-            L.marker([latitude, longitude]).addTo(map).bindPopup("Você está aqui").openPopup();
-
-            // Gerar mercados simulados próximos (Adicionando um valor pequeno na lat/lng)
-            const mercados = [
-                { nome: "Mercado Central", lat: latitude + 0.002, lng: longitude + 0.002 },
-                { nome: "Supermercado Econômico", lat: latitude - 0.003, lng: longitude + 0.001 },
-                { nome: "Hortifruti Vida", lat: latitude + 0.001, lng: longitude - 0.004 }
-            ];
-
-            mercados.forEach(m => {
-                let marker = L.marker([m.lat, m.lng], {
-                    icon: L.icon({
-                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3081/3081840.png',
-                        iconSize: [30, 30]
-                    })
-                }).addTo(map);
-
-                marker.on('click', () => {
-                    selectedMarket = m.nome;
-                    document.getElementById('nome-mercado').innerText = m.nome;
-                    document.getElementById('market-selected').classList.remove('hidden');
-                });
+        function initMap() {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const map = L.map('map').setView([pos.coords.latitude, pos.coords.longitude], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(map);
             });
+        }
 
-        }, () => alert("Ative o GPS!"));
-    }
+        function startScanner(store) {
+            document.getElementById('store-name').innerText = store;
+            changePage('scanner');
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+            (decodedText) => {
+                addItem(decodedText);
+            });
+        }
 
-    // 3. Lógica do Scanner
-    function abrirScanner() {
-        document.getElementById('step-2').classList.add('hidden');
-        document.getElementById('step-3').classList.remove('hidden');
-        document.getElementById('info-loja').innerText = "Loja: " + selectedMarket;
-
-        const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        scanner.render((text) => {
-            alert(`Sucesso no ${selectedMarket}!\nCódigo: ${text}`);
-            scanner.clear();
-        });
-    }
-
-    function voltarParaMapa() {
-        document.getElementById('step-3').classList.add('hidden');
-        document.getElementById('step-2').classList.remove('hidden');
-    }
-</script>
-
+        function addItem(name) {
+            cart.push(name);
+            document.getElementById('cart-count').innerText = cart.length;
+            document.getElementById('final-count').innerText = cart.length;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'product-item';
+            itemDiv.innerHTML = `<span>${name}</span> <strong>R$ ${(Math.random()*10 + 2).toFixed(2)}</strong>`;
+            document.getElementById('scanned-items').prepend(itemDiv);
+            
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
+    </script>
 </body>
 </html>
