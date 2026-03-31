@@ -1,0 +1,27 @@
+{
+  "name": "scanmarket",
+  "version": "1.0.0",
+  "description": "🛒 ScanMarket - Smart Checkout System\r O ScanMarket é uma aplicação web experimental (SPA) focada em transformar a experiência de compra em supermercados físicos. O projeto elimina filas tradicionais ao permitir que o usuário gerencie sua própria jornada: do login à liberação fiscal de saída.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EnzoHorcai/ScanMarket.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EnzoHorcai/ScanMarket/issues"
+  },
+  "homepage": "https://github.com/EnzoHorcai/ScanMarket#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "sqlite3": "^6.0.1"
+  }
+}

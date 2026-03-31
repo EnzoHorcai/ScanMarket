@@ -3,3 +3,6 @@ Lógica de processamento da câmera e decodificação do QR:	unpkg.com/html5-qrc
 Motor do mapa interativo e manipulação de camadas:        	unpkg.com/leaflet/dist/leaflet.js;
 
 Estilização visual dos mapas e ícones:                   	unpkg.com/leaflet/dist/leaflet.css;
+
+sqlite3
+cors
