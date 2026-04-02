@@ -44,7 +44,7 @@
         </div>
         <div class="input-group">
             <label>CPF</label>
-            <input type="text" placeholder="000.000.000-00">
+            <input type="text" id="cpf-input" placeholder="000.000.000-00" maxlength="14">
         </div>
         <div class="input-group">
             <label>Senha</label>
@@ -98,9 +98,30 @@
         <button class="btn-main" onclick="location.reload()">Voltar ao Início</button>
     </div>
 
-    <script>
-        let cart = [];
-        let html5QrCode;
+    
+                <script>
+    // --- CÓDIGO DA MÁSCARA DE CPF ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputCPF = document.getElementById('cpf-input');
+
+        inputCPF.addEventListener('input', (e) => {
+            let value = e.target.value;
+            value = value.replace(/\D/g, ""); // Remove letras
+            
+            // Aplica a formatação 000.000.000-00
+            value = value.replace(/(\d{3})(\d)/, "$1.$2");
+            value = value.replace(/(\d{3})(\d)/, "$1.$2");
+            value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+            e.target.value = value;
+        });
+    });
+    // --- FIM DO CÓDIGO DA MÁSCARA ---
+
+    let cart = [];
+    let html5QrCode;
+    
+
 
         function changePage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
